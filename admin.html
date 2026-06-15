@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lable — 직원 관리</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; }
+    .app { max-width: 680px; margin: 0 auto; padding: 1rem; }
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0 1rem; border-bottom: 1px solid #e8e8e8; margin-bottom: 1.25rem; }
+    .logo { font-size: 20px; font-weight: 600; color: #111; letter-spacing: 0.04em; }
+    .logo span { color: #378ADD; }
+    .clock { font-size: 13px; color: #aaa; }
+
+    .tab-bar { display: flex; gap: 4px; background: #ebebeb; border-radius: 10px; padding: 4px; margin-bottom: 1.25rem; }
+    .tab { flex: 1; padding: 8px; border: none; background: none; border-radius: 8px; font-size: 13px; color: #888; cursor: pointer; }
+    .tab.active { background: #fff; color: #111; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* 메트릭 */
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+    .metric { background: #fff; border-radius: 12px; padding: 1rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .mlabel { font-size: 12px; color: #999; margin-bottom: 6px; }
+    .mval { font-size: 26px; font-weight: 700; color: #111; }
+    .mval.teal { color: #0F6E56; }
+    .mval.amber { color: #854F0B; }
+
+    /* 매칭 알림 */
+    .match-alert { background: #EAF3DE; border: 1px solid #C0DD97; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+    .match-alert.hide { display: none; }
+    .match-text { flex: 1; font-size: 14px; color: #27500A; font-weight: 500; }
+    .match-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-weight: 500; }
+
+    /* 테이블 그리드 */
+    .section-title { font-size: 13px; font-weight: 500; color: #999; margin-bottom: 10px; }
+    .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
+    .tbl-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 10px 8px; text-align: center; cursor: pointer; transition: box-shadow 0.15s; }
+    .tbl-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .tnum { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 3px; }
+    .tseat { font-size: 11px; color: #bbb; margin-bottom: 7px; }
+    .tbl-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; display: inline-block; }
+    .tbl-card.empty .tbl-badge { background: #EAF3DE; color: #3B6D11; }
+    .tbl-card.occupied .tbl-badge { background: #FEF3E2; color: #854F0B; }
+    .tbl-card.combined .tbl-badge { background: #E6F1FB; color: #185FA5; }
+
+    /* 대기 목록 */
+    .wait-list { display: flex; flex-direction: column; gap: 8px; }
+    .wait-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .wait-item.called { border-left: 3px solid #378ADD; }
+    .wnum { width: 28px; height: 28px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #888; flex-shrink: 0; }
+    .winfo { flex: 1; min-width: 0; }
+    .wname { font-size: 14px; font-weight: 600; color: #111; }
+    .wdetail { font-size: 12px; color: #999; margin-top: 2px; }
+    .pbadge { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 600; flex-shrink: 0; }
+    .p2 { background: #E1F5EE; color: #0F6E56; }
+    .p3 { background: #E6F1FB; color: #185FA5; }
+    .p4 { background: #EEEDFE; color: #534AB7; }
+    .p5p { background: #FEF3E2; color: #854F0B; }
+    .wactions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-sm { padding: 6px 11px; border-radius: 8px; font-size: 12px; border: 1px solid #e0e0e0; background: none; cursor: pointer; color: #555; font-weight: 500; }
+    .btn-sm:hover { background: #f5f5f5; }
+    .btn-sm.call { background: #185FA5; border-color: #185FA5; color: #fff; }
+    .btn-sm.call:hover { background: #0C447C; }
+    .empty-state { text-align: center; padding: 3rem 0; color: #bbb; font-size: 14px; }
+
+    /* 설정 */
+    .setup-list { display: flex; flex-direction: column; gap: 6px; }
+    .setup-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .setup-row span { flex: 1; font-size: 14px; color: #111; }
+    .setup-row select { padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; }
+    .save-btn { width: 100%; padding: 12px; margin-top: 1rem; border-radius: 10px; border: none; background: #185FA5; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .save-btn:hover { background: #0C447C; }
+
+    /* 모달 */
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 100; }
+    .modal-bg.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 1.25rem; width: 270px; }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #111; }
+    .modal-sub { font-size: 13px; color: #999; margin-bottom: 14px; }
+    .modal-btns { display: flex; flex-direction: column; gap: 8px; }
+    .modal-btn { padding: 10px 14px; border-radius: 10px; border: 1px solid #e0e0e0; background: none; cursor: pointer; font-size: 14px; color: #111; text-align: left; }
+    .modal-btn:hover { background: #f5f5f5; }
+    .modal-btn.primary { background: #185FA5; border-color: #185FA5; color: #fff; }
+    .modal-btn.primary:hover { background: #0C447C; }
+    .modal-close { margin-top: 8px; width: 100%; padding: 8px; border: none; background: none; color: #999; font-size: 13px; cursor: pointer; }
+
+    .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; z-index: 200; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">Lable<span>.</span> <span style="font-size:13px;font-weight:400;color:#999;margin-left:6px">직원용</span></div>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('dashboard')">현황</button>
+    <button class="tab" onclick="switchTab('waiting')">대기 <span id="wbadge"></span></button>
+    <button class="tab" onclick="switchTab('setup')">설정</button>
+  </div>
+
+  <!-- 현황 탭 -->
+  <div id="section-dashboard" class="section active">
+    <div class="metrics">
+      <div class="metric"><div class="mlabel">빈 테이블</div><div class="mval teal" id="m-empty">-</div></div>
+      <div class="metric"><div class="mlabel">사용 중</div><div class="mval amber" id="m-occ">-</div></div>
+      <div class="metric"><div class="mlabel">대기 팀</div><div class="mval" id="m-wait">-</div></div>
+    </div>
+
+    <div id="match-alert" class="match-alert hide">
+      <span style="font-size:20px">🔔</span>
+      <div class="match-text" id="match-text"></div>
+      <button class="match-btn" onclick="callMatch()">호출</button>
+    </div>
+
+    <div class="section-title">테이블 현황 — 클릭해서 상태 변경</div>
+    <div class="table-grid" id="table-grid"></div>
+  </div>
+
+  <!-- 대기 탭 -->
+  <div id="section-waiting" class="section">
+    <div class="section-title">대기 목록</div>
+    <div class="wait-list" id="wait-list"></div>
+  </div>
+
+  <!-- 설정 탭 -->
+  <div id="section-setup" class="section">
+    <div class="section-title">오늘 테이블 설정</div>
+    <div class="setup-list" id="setup-list"></div>
+    <button class="save-btn" onclick="saveSetup()">저장</button>
+  </div>
+</div>
+
+<!-- 테이블 모달 -->
+<div class="modal-bg" id="tbl-modal" onclick="closeTblModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-btns" id="modal-btns"></div>
+    <button class="modal-close" onclick="closeTblModal()">닫기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC0MGzM4cNKoUBeHO4nAWhFcyLTwOPh1a4",
+    authDomain: "lable-waiting.firebaseapp.com",
+    databaseURL: "https://lable-waiting-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "lable-waiting",
+    storageBucket: "lable-waiting.firebasestorage.app",
+    messagingSenderId: "1073923206160",
+    appId: "1:1073923206160:web:b42ad8098871463e08ee95"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const waitingRef = ref(db, 'waiting');
+  const tablesRef = ref(db, 'tables');
+
+  let tables = [];
+  let waiting = [];
+  let selectedTable = null;
+  let matchTarget = null;
+
+  // 테이블 초기화 (처음 한 번만)
+  async function initTablesIfNeeded(snapshot) {
+    if (!snapshot.val()) {
+      const defaultTables = {};
+      for (let i = 1; i <= 19; i++) {
+        defaultTables[i] = { id: i, seats: i <= 10 ? 2 : 4, status: 'empty' };
+      }
+      await set(tablesRef, defaultTables);
+    }
+  }
+
+  // 실시간 테이블 구독
+  onValue(tablesRef, (snapshot) => {
+    initTablesIfNeeded(snapshot);
+    const data = snapshot.val() || {};
+    tables = Object.values(data).sort((a, b) => a.id - b.id);
+    renderTableGrid();
+    renderMetrics();
+    renderSetup();
+  });
+
+  // 실시간 대기 구독
+  onValue(waitingRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    waiting = Object.entries(data)
+      .map(([key, val]) => ({ key, ...val }))
+      .sort((a, b) => a.createdAt - b.createdAt);
+    renderWaitList();
+    renderMetrics();
+  });
+
+  function renderTableGrid() {
+    const g = document.getElementById('table-grid');
+    g.innerHTML = tables.map(t => {
+      const cls = t.status === 'empty' ? 'empty' : t.status === 'combined' ? 'combined' : 'occupied';
+      const lbl = t.status === 'empty' ? '빈 자리' : t.status === 'combined' ? '합석 중' : '사용 중';
+      return `<div class="tbl-card ${cls}" onclick="openTblModal(${t.id})">
+        <div class="tnum">${t.id}번</div>
+        <div class="tseat">${t.seats}인석</div>
+        <div class="tbl-badge">${lbl}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderMetrics() {
+    const empty = tables.filter(t => t.status === 'empty').length;
+    const occ = tables.filter(t => t.status !== 'empty').length;
+    document.getElementById('m-empty').textContent = empty;
+    document.getElementById('m-occ').textContent = occ;
+    document.getElementById('m-wait').textContent = waiting.length;
+    document.getElementById('wbadge').textContent = waiting.length > 0 ? `(${waiting.length})` : '';
+    checkMatch();
+  }
+
+  function checkMatch() {
+    const emptyTables = tables.filter(t => t.status === 'empty');
+    if (!emptyTables.length || !waiting.length) {
+      document.getElementById('match-alert').classList.add('hide');
+      matchTarget = null; return;
+    }
+    const emptySeats = [...new Set(emptyTables.map(t => t.seats))];
+    for (const w of waiting) {
+      const p = w.people;
+      if (p <= 2 && emptySeats.includes(2)) {
+        matchTarget = w;
+        document.getElementById('match-text').textContent = `${w.name}님 (${p}명) — 2인석 자리 났어요`;
+        document.getElementById('match-alert').classList.remove('hide'); return;
+      }
+      if (p >= 3 && p <= 4 && emptySeats.includes(4)) {
+        matchTarget = w;
+        document.getElementById('match-text').textContent = `${w.name}님 (${p}명) — 4인석 자리 났어요`;
+        document.getElementById('match-alert').classList.remove('hide'); return;
+      }
+      if (p >= 5 && emptySeats.includes(2) && emptySeats.includes(4)) {
+        matchTarget = w;
+        document.getElementById('match-text').textContent = `${w.name}님 (${p}명) — 2인석+4인석 붙이기 추천`;
+        document.getElementById('match-alert').classList.remove('hide'); return;
+      }
+    }
+    document.getElementById('match-alert').classList.add('hide');
+    matchTarget = null;
+  }
+
+  window.callMatch = async function() {
+    if (!matchTarget) return;
+    await update(ref(db, `waiting/${matchTarget.key}`), { status: 'called' });
+    showToast(`${matchTarget.name}님 호출 완료`);
+  };
+
+  function renderWaitList() {
+    const el = document.getElementById('wait-list');
+    if (!waiting.length) { el.innerHTML = '<div class="empty-state">대기 중인 손님이 없어요</div>'; return; }
+    el.innerHTML = waiting.map((w, i) => {
+      const p = w.people;
+      const pc = p <= 2 ? 'p2' : p === 3 ? 'p3' : p === 4 ? 'p4' : 'p5p';
+      const calledMark = w.status === 'called' ? '<span style="font-size:11px;color:#185FA5;margin-left:6px;font-weight:500">호출됨</span>' : '';
+      return `<div class="wait-item ${w.status === 'called' ? 'called' : ''}">
+        <div class="wnum">${i + 1}</div>
+        <div class="winfo">
+          <div class="wname">${w.name}${calledMark}</div>
+          <div class="wdetail">${w.phone}</div>
+        </div>
+        <span class="pbadge ${pc}">${p}명</span>
+        <div class="wactions">
+          <button class="btn-sm call" onclick="callWaiting('${w.key}', '${w.name}')">호출</button>
+          <button class="btn-sm" onclick="admitWaiting('${w.key}')">입장</button>
+          <button class="btn-sm" onclick="removeWaiting('${w.key}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.callWaiting = async function(key, name) {
+    await update(ref(db, `waiting/${key}`), { status: 'called' });
+    showToast(`${name}님 호출 완료`);
+  };
+
+  window.admitWaiting = async function(key) {
+    await remove(ref(db, `waiting/${key}`));
+    showToast('입장 처리 완료');
+  };
+
+  window.removeWaiting = async function(key) {
+    await remove(ref(db, `waiting/${key}`));
+    showToast('대기 취소 처리됨');
+  };
+
+  window.openTblModal = function(id) {
+    selectedTable = tables.find(t => t.id === id);
+    document.getElementById('modal-title').textContent = `${id}번 테이블`;
+    document.getElementById('modal-sub').textContent = `${selectedTable.seats}인석 · ${selectedTable.status === 'empty' ? '빈 자리' : selectedTable.status === 'combined' ? '합석 중' : '사용 중'}`;
+    const btns = document.getElementById('modal-btns');
+    if (selectedTable.status === 'empty') {
+      btns.innerHTML = `<button class="modal-btn primary" onclick="setTblStatus('occupied')">손님 착석</button>
+        <button class="modal-btn" onclick="setTblStatus('combined')">합석 처리</button>`;
+    } else {
+      btns.innerHTML = `<button class="modal-btn primary" onclick="setTblStatus('empty')">자리 비움</button>`;
+    }
+    document.getElementById('tbl-modal').classList.add('open');
+  };
+
+  window.setTblStatus = async function(status) {
+    if (!selectedTable) return;
+    await update(ref(db, `tables/${selectedTable.id}`), { status });
+    closeTblModal();
+  };
+
+  window.closeTblModal = function(e) {
+    if (!e || e.target === document.getElementById('tbl-modal'))
+      document.getElementById('tbl-modal').classList.remove('open');
+  };
+
+  function renderSetup() {
+    const el = document.getElementById('setup-list');
+    if (!tables.length) return;
+    el.innerHTML = tables.map(t => `
+      <div class="setup-row">
+        <span>${t.id}번 테이블</span>
+        <select id="su-${t.id}">
+          <option ${t.seats === 2 ? 'selected' : ''}>2인석</option>
+          <option ${t.seats === 4 ? 'selected' : ''}>4인석</option>
+          <option ${t.seats === 6 ? 'selected' : ''}>6인석</option>
+          <option ${t.seats === 0 ? 'selected' : ''}>사용 안 함</option>
+        </select>
+      </div>`).join('');
+  }
+
+  window.saveSetup = async function() {
+    const updates = {};
+    tables.forEach(t => {
+      const v = document.getElementById(`su-${t.id}`).value;
+      updates[`tables/${t.id}/seats`] = v === '사용 안 함' ? 0 : parseInt(v);
+      if (v === '사용 안 함') updates[`tables/${t.id}/status`] = 'occupied';
+    });
+    await update(ref(db), updates);
+    showToast('테이블 설정 저장됨');
+    switchTab('dashboard');
+  };
+
+  window.switchTab = function(t) {
+    document.querySelectorAll('.tab').forEach((b, i) => b.classList.toggle('active', ['dashboard', 'waiting', 'setup'][i] === t));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`section-${t}`).classList.add('active');
+  };
+
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  function tick() {
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 30000);
+</script>
+</body>
+</html>

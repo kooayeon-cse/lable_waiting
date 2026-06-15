@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lable — 웨이팅</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .wrap { width: 100%; max-width: 400px; }
+    .hero { text-align: center; padding: 2rem 0 1.5rem; }
+    .logo { font-size: 32px; font-weight: 600; color: #111; letter-spacing: 0.06em; }
+    .logo span { color: #378ADD; }
+    .sub { font-size: 14px; color: #888; margin-top: 8px; }
+    .card { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .label { font-size: 13px; color: #666; margin-bottom: 6px; display: block; }
+    .row { margin-bottom: 16px; }
+    input { width: 100%; padding: 11px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.15s; }
+    input:focus { border-color: #378ADD; }
+    .submit { width: 100%; padding: 13px; border-radius: 10px; border: none; background: #185FA5; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .submit:hover { background: #0C447C; }
+    .submit:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* 상태 화면 */
+    .status { display: none; text-align: center; }
+    .status.show { display: block; }
+    .rank-num { font-size: 72px; font-weight: 700; color: #185FA5; line-height: 1; }
+    .rank-label { font-size: 16px; color: #888; margin-top: 4px; }
+    .info-box { background: #f8f8f8; border-radius: 12px; padding: 1rem 1.25rem; margin-top: 1.25rem; text-align: left; }
+    .info-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+    .info-row .key { color: #888; }
+    .info-row .val { font-weight: 500; color: #111; }
+    .badge { display: inline-block; margin-top: 1.25rem; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+    .badge.waiting { background: #FEF3E2; color: #854F0B; }
+    .badge.called { background: #E6F1FB; color: #185FA5; }
+    .cancel { margin-top: 1rem; width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e0e0e0; background: none; font-size: 14px; color: #888; cursor: pointer; }
+    .cancel:hover { background: #f5f5f5; }
+    .divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.25rem 0; }
+
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo">Lable<span>.</span></div>
+    <div class="sub">정보를 입력하고 대기를 등록해주세요</div>
+  </div>
+
+  <!-- 등록 폼 -->
+  <div class="card" id="form-card">
+    <div class="row">
+      <label class="label">이름</label>
+      <input type="text" id="name" placeholder="홍길동" maxlength="20">
+    </div>
+    <div class="row">
+      <label class="label">전화번호</label>
+      <input type="tel" id="phone" placeholder="010-0000-0000" maxlength="13">
+    </div>
+    <div class="row">
+      <label class="label">인원 수</label>
+      <input type="number" id="people" placeholder="명 수 입력 (예: 3)" min="1" max="20">
+    </div>
+    <button class="submit" id="submit-btn" onclick="register()">대기 등록하기</button>
+  </div>
+
+  <!-- 상태 화면 -->
+  <div class="card status" id="status-card">
+    <div class="rank-num" id="rank-num">-</div>
+    <div class="rank-label">번째 대기 중</div>
+    <hr class="divider">
+    <div class="info-box">
+      <div class="info-row"><span class="key">이름</span><span class="val" id="st-name"></span></div>
+      <div class="info-row"><span class="key">인원</span><span class="val" id="st-people"></span></div>
+      <div class="info-row"><span class="key">전화번호</span><span class="val" id="st-phone"></span></div>
+    </div>
+    <div class="badge waiting" id="st-badge">대기 중</div>
+    <br>
+    <button class="cancel" onclick="cancel()">대기 취소</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC0MGzM4cNKoUBeHO4nAWhFcyLTwOPh1a4",
+    authDomain: "lable-waiting.firebaseapp.com",
+    databaseURL: "https://lable-waiting-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "lable-waiting",
+    storageBucket: "lable-waiting.firebasestorage.app",
+    messagingSenderId: "1073923206160",
+    appId: "1:1073923206160:web:b42ad8098871463e08ee95"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const waitingRef = ref(db, 'waiting');
+
+  let myKey = localStorage.getItem('lable_my_key');
+  let allWaiting = {};
+
+  // 실시간 대기 목록 구독
+  onValue(waitingRef, (snapshot) => {
+    allWaiting = snapshot.val() || {};
+    if (myKey && allWaiting[myKey]) {
+      showStatus();
+    } else if (myKey && !allWaiting[myKey]) {
+      // 내 대기가 삭제됨 (입장 처리됨)
+      myKey = null;
+      localStorage.removeItem('lable_my_key');
+      showForm();
+      showToast('입장이 확인됐어요! 즐거운 시간 되세요 🍺');
+    }
+  });
+
+  function showStatus() {
+    const entries = Object.entries(allWaiting).sort((a, b) => a[1].createdAt - b[1].createdAt);
+    const idx = entries.findIndex(([k]) => k === myKey);
+    const my = allWaiting[myKey];
+
+    document.getElementById('rank-num').textContent = idx + 1;
+    document.getElementById('st-name').textContent = my.name;
+    document.getElementById('st-people').textContent = my.people + '명';
+    document.getElementById('st-phone').textContent = my.phone;
+
+    const badge = document.getElementById('st-badge');
+    if (my.status === 'called') {
+      badge.textContent = '입장 가능 — 직원에게 말씀해주세요';
+      badge.className = 'badge called';
+    } else {
+      badge.textContent = '대기 중';
+      badge.className = 'badge waiting';
+    }
+
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('status-card').classList.add('show');
+  }
+
+  function showForm() {
+    document.getElementById('form-card').style.display = 'block';
+    document.getElementById('status-card').classList.remove('show');
+  }
+
+  window.register = async function() {
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const people = parseInt(document.getElementById('people').value);
+    if (!name) { showToast('이름을 입력해주세요'); return; }
+    if (!phone) { showToast('전화번호를 입력해주세요'); return; }
+    if (!people || people < 1) { showToast('인원 수를 입력해주세요'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '등록 중...';
+
+    const newRef = await push(waitingRef, {
+      name, phone, people,
+      status: 'waiting',
+      createdAt: Date.now()
+    });
+
+    myKey = newRef.key;
+    localStorage.setItem('lable_my_key', myKey);
+    btn.disabled = false;
+    btn.textContent = '대기 등록하기';
+    showToast('대기 등록 완료!');
+  };
+
+  window.cancel = async function() {
+    if (!myKey) return;
+    await remove(ref(db, `waiting/${myKey}`));
+    myKey = null;
+    localStorage.removeItem('lable_my_key');
+    document.getElementById('name').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('people').value = '';
+    showForm();
+    showToast('대기가 취소됐어요');
+  };
+
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  // 이미 등록한 사람이 다시 접속하면 상태 화면 바로 표시
+  if (myKey) showStatus();
+</script>
+</body>
+</html>
