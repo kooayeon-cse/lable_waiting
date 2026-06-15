@@ -4,80 +4,100 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lable — 웨이팅</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-    .wrap { width: 100%; max-width: 400px; }
-    .hero { text-align: center; padding: 2rem 0 1.5rem; }
-    .logo { font-size: 32px; font-weight: 600; color: #111; letter-spacing: 0.06em; }
-    .logo span { color: #378ADD; }
-    .sub { font-size: 14px; color: #888; margin-top: 8px; }
-    .card { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    .label { font-size: 13px; color: #666; margin-bottom: 6px; display: block; }
-    .row { margin-bottom: 16px; }
-    input { width: 100%; padding: 11px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; outline: none; transition: border 0.15s; }
-    input:focus { border-color: #378ADD; }
-    .submit { width: 100%; padding: 13px; border-radius: 10px; border: none; background: #185FA5; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
-    .submit:hover { background: #0C447C; }
-    .submit:disabled { background: #ccc; cursor: not-allowed; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100vh;background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif}
+    .frame{max-width:390px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+    .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.18;pointer-events:none;z-index:0}
+    .orb1{width:300px;height:300px;background:#3b6ff0;top:-80px;right:-60px}
+    .orb2{width:250px;height:250px;background:#e04a7a;bottom:100px;left:-80px}
+    .top{padding:2.5rem 1.5rem 0;position:relative;z-index:1}
+    .logo{font-family:'Playfair Display',serif;font-style:italic;font-size:36px;font-weight:700;color:#fff;letter-spacing:-0.01em}
+    .logo span{color:#3b6ff0}
+    .tagline{font-size:11px;font-weight:300;color:#555;letter-spacing:0.18em;text-transform:uppercase;margin-top:5px}
+    .bar{display:flex;align-items:center;gap:8px;margin:1.5rem 1.5rem 0;padding:10px 14px;border:0.5px solid #1e1e1e;border-radius:10px;background:rgba(255,255,255,0.02);position:relative;z-index:1}
+    .bar-dot{width:6px;height:6px;border-radius:50%;background:#3b6ff0;flex-shrink:0}
+    .bar-text{font-size:12px;color:#555;letter-spacing:0.04em}
+    .form{padding:1.5rem;position:relative;z-index:1;flex:1}
+    .flabel{font-size:11px;font-weight:500;color:#444;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;display:block}
+    .frow{margin-bottom:1rem}
+    input{width:100%;background:#111;border:0.5px solid #1e1e1e;border-radius:10px;padding:13px 16px;font-size:15px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+    input::placeholder{color:#2e2e2e}
+    input:focus{border-color:#3b6ff0}
+    .sbtn{width:100%;margin-top:1.25rem;padding:15px;border-radius:12px;border:none;background:#3b6ff0;color:#fff;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:0.02em;transition:background 0.15s}
+    .sbtn:hover{background:#2d5dd4}
+    .sbtn:disabled{background:#1a1a1a;color:#2e2e2e;cursor:not-allowed}
 
     /* 상태 화면 */
-    .status { display: none; text-align: center; }
-    .status.show { display: block; }
-    .rank-num { font-size: 72px; font-weight: 700; color: #185FA5; line-height: 1; }
-    .rank-label { font-size: 16px; color: #888; margin-top: 4px; }
-    .info-box { background: #f8f8f8; border-radius: 12px; padding: 1rem 1.25rem; margin-top: 1.25rem; text-align: left; }
-    .info-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
-    .info-row .key { color: #888; }
-    .info-row .val { font-weight: 500; color: #111; }
-    .badge { display: inline-block; margin-top: 1.25rem; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; }
-    .badge.waiting { background: #FEF3E2; color: #854F0B; }
-    .badge.called { background: #E6F1FB; color: #185FA5; }
-    .cancel { margin-top: 1rem; width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e0e0e0; background: none; font-size: 14px; color: #888; cursor: pointer; }
-    .cancel:hover { background: #f5f5f5; }
-    .divider { border: none; border-top: 1px solid #f0f0f0; margin: 1.25rem 0; }
+    .status{display:none;padding:1.5rem;flex:1;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;z-index:1}
+    .status.show{display:flex}
+    .rank-big{font-family:'Playfair Display',serif;font-style:italic;font-size:100px;font-weight:700;color:#fff;line-height:1;letter-spacing:-0.02em}
+    .rank-unit{font-size:12px;color:#444;letter-spacing:0.16em;text-transform:uppercase;margin-top:6px}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:500;letter-spacing:0.06em;margin:1rem 0}
+    .pill.waiting{background:rgba(59,111,240,0.1);border:0.5px solid rgba(59,111,240,0.25);color:#3b6ff0}
+    .pill.called{background:rgba(52,199,89,0.1);border:0.5px solid rgba(52,199,89,0.25);color:#34c759}
+    .pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+    .icard{width:100%;background:#111;border:0.5px solid #1a1a1a;border-radius:14px;padding:1.25rem;text-align:left;margin:0.5rem 0}
+    .irow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid #161616}
+    .irow:last-child{border-bottom:none}
+    .ikey{font-size:11px;color:#444;letter-spacing:0.1em;text-transform:uppercase}
+    .ival{font-size:14px;color:#bbb}
+    .cbtn{margin-top:1rem;width:100%;padding:12px;border-radius:10px;border:0.5px solid #1a1a1a;background:none;color:#2e2e2e;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
+    .cbtn:hover{border-color:#2e2e2e;color:#555}
 
-    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
-    .toast.show { opacity: 1; }
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a1a1a;border:0.5px solid #2a2a2a;color:#bbb;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;z-index:200}
+    .toast.show{opacity:1}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hero">
+<div class="frame">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="top">
     <div class="logo">Lable<span>.</span></div>
-    <div class="sub">정보를 입력하고 대기를 등록해주세요</div>
+    <div class="tagline">own your lable, embrace the vibe</div>
+  </div>
+  <div class="bar">
+    <div class="bar-dot"></div>
+    <div class="bar-text">현재 웨이팅을 받고 있어요</div>
   </div>
 
   <!-- 등록 폼 -->
-  <div class="card" id="form-card">
-    <div class="row">
-      <label class="label">이름</label>
-      <input type="text" id="name" placeholder="홍길동" maxlength="20">
+  <div class="form" id="form-area">
+    <div class="frow">
+      <label class="flabel">이름</label>
+      <input type="text" id="g-name" placeholder="홍길동" maxlength="20">
     </div>
-    <div class="row">
-      <label class="label">전화번호</label>
-      <input type="tel" id="phone" placeholder="010-0000-0000" maxlength="13">
+    <div class="frow">
+      <label class="flabel">전화번호</label>
+      <input type="tel" id="g-phone" placeholder="010-0000-0000" maxlength="13">
     </div>
-    <div class="row">
-      <label class="label">인원 수</label>
-      <input type="number" id="people" placeholder="명 수 입력 (예: 3)" min="1" max="20">
+    <div class="frow">
+      <label class="flabel">인원 수</label>
+      <input type="number" id="g-people" placeholder="몇 명이세요?" min="1" max="20">
     </div>
-    <button class="submit" id="submit-btn" onclick="register()">대기 등록하기</button>
+    <button class="sbtn" id="submit-btn" onclick="register()">웨이팅 등록</button>
   </div>
 
-  <!-- 상태 화면 -->
-  <div class="card status" id="status-card">
-    <div class="rank-num" id="rank-num">-</div>
-    <div class="rank-label">번째 대기 중</div>
-    <hr class="divider">
-    <div class="info-box">
-      <div class="info-row"><span class="key">이름</span><span class="val" id="st-name"></span></div>
-      <div class="info-row"><span class="key">인원</span><span class="val" id="st-people"></span></div>
-      <div class="info-row"><span class="key">전화번호</span><span class="val" id="st-phone"></span></div>
+  <!-- 대기 상태 -->
+  <div class="status" id="status-area">
+    <div>
+      <div class="rank-big" id="rank-num">-</div>
+      <div class="rank-unit">번째 대기 중</div>
     </div>
-    <div class="badge waiting" id="st-badge">대기 중</div>
-    <br>
-    <button class="cancel" onclick="cancel()">대기 취소</button>
+    <div class="pill waiting" id="st-pill">
+      <span class="pill-dot"></span>
+      대기 중
+    </div>
+    <div class="icard">
+      <div class="irow"><span class="ikey">이름</span><span class="ival" id="st-name"></span></div>
+      <div class="irow"><span class="ikey">인원</span><span class="ival" id="st-people"></span></div>
+      <div class="irow"><span class="ikey">전화번호</span><span class="ival" id="st-phone"></span></div>
+    </div>
+    <button class="cbtn" onclick="cancel()">대기 취소</button>
   </div>
 </div>
 
@@ -104,13 +124,11 @@
   let myKey = localStorage.getItem('lable_my_key');
   let allWaiting = {};
 
-  // 실시간 대기 목록 구독
   onValue(waitingRef, (snapshot) => {
     allWaiting = snapshot.val() || {};
     if (myKey && allWaiting[myKey]) {
       showStatus();
     } else if (myKey && !allWaiting[myKey]) {
-      // 내 대기가 삭제됨 (입장 처리됨)
       myKey = null;
       localStorage.removeItem('lable_my_key');
       showForm();
@@ -122,53 +140,43 @@
     const entries = Object.entries(allWaiting).sort((a, b) => a[1].createdAt - b[1].createdAt);
     const idx = entries.findIndex(([k]) => k === myKey);
     const my = allWaiting[myKey];
-
     document.getElementById('rank-num').textContent = idx + 1;
     document.getElementById('st-name').textContent = my.name;
     document.getElementById('st-people').textContent = my.people + '명';
     document.getElementById('st-phone').textContent = my.phone;
-
-    const badge = document.getElementById('st-badge');
+    const pill = document.getElementById('st-pill');
     if (my.status === 'called') {
-      badge.textContent = '입장 가능 — 직원에게 말씀해주세요';
-      badge.className = 'badge called';
+      pill.innerHTML = '<span class="pill-dot"></span>입장 가능 — 직원에게 말씀해주세요';
+      pill.className = 'pill called';
     } else {
-      badge.textContent = '대기 중';
-      badge.className = 'badge waiting';
+      pill.innerHTML = '<span class="pill-dot"></span>대기 중';
+      pill.className = 'pill waiting';
     }
-
-    document.getElementById('form-card').style.display = 'none';
-    document.getElementById('status-card').classList.add('show');
+    document.getElementById('form-area').style.display = 'none';
+    document.getElementById('status-area').classList.add('show');
   }
 
   function showForm() {
-    document.getElementById('form-card').style.display = 'block';
-    document.getElementById('status-card').classList.remove('show');
+    document.getElementById('form-area').style.display = 'block';
+    document.getElementById('status-area').classList.remove('show');
   }
 
   window.register = async function() {
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const people = parseInt(document.getElementById('people').value);
+    const name = document.getElementById('g-name').value.trim();
+    const phone = document.getElementById('g-phone').value.trim();
+    const people = parseInt(document.getElementById('g-people').value);
     if (!name) { showToast('이름을 입력해주세요'); return; }
     if (!phone) { showToast('전화번호를 입력해주세요'); return; }
     if (!people || people < 1) { showToast('인원 수를 입력해주세요'); return; }
-
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
     btn.textContent = '등록 중...';
-
-    const newRef = await push(waitingRef, {
-      name, phone, people,
-      status: 'waiting',
-      createdAt: Date.now()
-    });
-
+    const newRef = await push(waitingRef, { name, phone, people, status: 'waiting', createdAt: Date.now() });
     myKey = newRef.key;
     localStorage.setItem('lable_my_key', myKey);
     btn.disabled = false;
-    btn.textContent = '대기 등록하기';
-    showToast('대기 등록 완료!');
+    btn.textContent = '웨이팅 등록';
+    showToast('웨이팅 등록 완료!');
   };
 
   window.cancel = async function() {
@@ -176,9 +184,9 @@
     await remove(ref(db, `waiting/${myKey}`));
     myKey = null;
     localStorage.removeItem('lable_my_key');
-    document.getElementById('name').value = '';
-    document.getElementById('phone').value = '';
-    document.getElementById('people').value = '';
+    document.getElementById('g-name').value = '';
+    document.getElementById('g-phone').value = '';
+    document.getElementById('g-people').value = '';
     showForm();
     showToast('대기가 취소됐어요');
   };
@@ -190,7 +198,6 @@
     setTimeout(() => el.classList.remove('show'), 2500);
   }
 
-  // 이미 등록한 사람이 다시 접속하면 상태 화면 바로 표시
   if (myKey) showStatus();
 </script>
 </body>
