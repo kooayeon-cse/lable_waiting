@@ -12,38 +12,45 @@
     .logo { font-size: 20px; font-weight: 600; color: #111; letter-spacing: 0.04em; }
     .logo span { color: #378ADD; }
     .clock { font-size: 13px; color: #aaa; }
-
     .tab-bar { display: flex; gap: 4px; background: #ebebeb; border-radius: 10px; padding: 4px; margin-bottom: 1.25rem; }
     .tab { flex: 1; padding: 8px; border: none; background: none; border-radius: 8px; font-size: 13px; color: #888; cursor: pointer; }
     .tab.active { background: #fff; color: #111; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     .section { display: none; }
     .section.active { display: block; }
-
-    /* 메트릭 */
     .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
     .metric { background: #fff; border-radius: 12px; padding: 1rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .mlabel { font-size: 12px; color: #999; margin-bottom: 6px; }
     .mval { font-size: 26px; font-weight: 700; color: #111; }
     .mval.teal { color: #0F6E56; }
     .mval.amber { color: #854F0B; }
-
-    /* 매칭 알림 */
     .match-alert { background: #EAF3DE; border: 1px solid #C0DD97; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
     .match-alert.hide { display: none; }
     .match-text { flex: 1; font-size: 14px; color: #27500A; font-weight: 500; }
     .match-btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-weight: 500; }
+    .section-title { font-size: 13px; font-weight: 500; color: #999; margin-bottom: 10px; }
+
+    /* 다중선택 툴바 */
+    .multi-toolbar { display: none; align-items: center; justify-content: space-between; background: #185FA5; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
+    .multi-toolbar.show { display: flex; }
+    .multi-info { font-size: 13px; color: #fff; font-weight: 500; }
+    .multi-actions { display: flex; gap: 6px; }
+    .mbtn { padding: 6px 12px; border-radius: 8px; border: none; font-size: 12px; font-weight: 500; cursor: pointer; }
+    .mbtn.seated { background: #fff; color: #185FA5; }
+    .mbtn.empty { background: rgba(255,255,255,0.2); color: #fff; }
+    .mbtn.cancel { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
 
     /* 테이블 그리드 */
-    .section-title { font-size: 13px; font-weight: 500; color: #999; margin-bottom: 10px; }
     .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
-    .tbl-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 10px 8px; text-align: center; cursor: pointer; transition: box-shadow 0.15s; }
+    .tbl-card { background: #fff; border: 2px solid #e8e8e8; border-radius: 12px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.15s; user-select: none; }
     .tbl-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .tbl-card.selected { border-color: #185FA5; background: #EBF3FC; }
     .tnum { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 3px; }
     .tseat { font-size: 11px; color: #bbb; margin-bottom: 7px; }
     .tbl-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; display: inline-block; }
     .tbl-card.empty .tbl-badge { background: #EAF3DE; color: #3B6D11; }
     .tbl-card.occupied .tbl-badge { background: #FEF3E2; color: #854F0B; }
     .tbl-card.combined .tbl-badge { background: #E6F1FB; color: #185FA5; }
+    .tbl-card.selected .tbl-badge { background: #185FA5; color: #fff; }
 
     /* 대기 목록 */
     .wait-list { display: flex; flex-direction: column; gap: 8px; }
@@ -103,31 +110,37 @@
     <button class="tab" onclick="switchTab('setup')">설정</button>
   </div>
 
-  <!-- 현황 탭 -->
   <div id="section-dashboard" class="section active">
     <div class="metrics">
       <div class="metric"><div class="mlabel">빈 테이블</div><div class="mval teal" id="m-empty">-</div></div>
       <div class="metric"><div class="mlabel">사용 중</div><div class="mval amber" id="m-occ">-</div></div>
       <div class="metric"><div class="mlabel">대기 팀</div><div class="mval" id="m-wait">-</div></div>
     </div>
-
     <div id="match-alert" class="match-alert hide">
       <span style="font-size:20px">🔔</span>
       <div class="match-text" id="match-text"></div>
       <button class="match-btn" onclick="callMatch()">호출</button>
     </div>
 
-    <div class="section-title">테이블 현황 — 클릭해서 상태 변경</div>
+    <!-- 다중선택 툴바 -->
+    <div class="multi-toolbar" id="multi-toolbar">
+      <div class="multi-info" id="multi-info">0개 선택됨</div>
+      <div class="multi-actions">
+        <button class="mbtn seated" onclick="bulkSetStatus('occupied')">착석</button>
+        <button class="mbtn empty" onclick="bulkSetStatus('empty')">비움</button>
+        <button class="mbtn cancel" onclick="clearSelection()">취소</button>
+      </div>
+    </div>
+
+    <div class="section-title">테이블 현황 — 꾹 누르면 다중 선택 / 단일 클릭으로 상태 변경</div>
     <div class="table-grid" id="table-grid"></div>
   </div>
 
-  <!-- 대기 탭 -->
   <div id="section-waiting" class="section">
     <div class="section-title">대기 목록</div>
     <div class="wait-list" id="wait-list"></div>
   </div>
 
-  <!-- 설정 탭 -->
   <div id="section-setup" class="section">
     <div class="section-title">오늘 테이블 설정</div>
     <div class="setup-list" id="setup-list"></div>
@@ -135,7 +148,6 @@
   </div>
 </div>
 
-<!-- 테이블 모달 -->
 <div class="modal-bg" id="tbl-modal" onclick="closeTblModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title" id="modal-title"></div>
@@ -170,19 +182,21 @@
   let waiting = [];
   let selectedTable = null;
   let matchTarget = null;
+  let selectedIds = new Set();
+  let multiSelectMode = false;
+  let pressTimer = null;
 
-  // 테이블 초기화 (처음 한 번만)
   async function initTablesIfNeeded(snapshot) {
     if (!snapshot.val()) {
       const defaultTables = {};
       for (let i = 1; i <= 19; i++) {
-        defaultTables[i] = { id: i, seats: i <= 10 ? 2 : 4, status: 'empty' };
+        // 15, 16번만 4인석, 나머지 2인석
+        defaultTables[i] = { id: i, seats: (i === 15 || i === 16) ? 4 : 2, status: 'empty' };
       }
       await set(tablesRef, defaultTables);
     }
   }
 
-  // 실시간 테이블 구독
   onValue(tablesRef, (snapshot) => {
     initTablesIfNeeded(snapshot);
     const data = snapshot.val() || {};
@@ -192,7 +206,6 @@
     renderSetup();
   });
 
-  // 실시간 대기 구독
   onValue(waitingRef, (snapshot) => {
     const data = snapshot.val() || {};
     waiting = Object.entries(data)
@@ -205,15 +218,84 @@
   function renderTableGrid() {
     const g = document.getElementById('table-grid');
     g.innerHTML = tables.map(t => {
-      const cls = t.status === 'empty' ? 'empty' : t.status === 'combined' ? 'combined' : 'occupied';
-      const lbl = t.status === 'empty' ? '빈 자리' : t.status === 'combined' ? '합석 중' : '사용 중';
-      return `<div class="tbl-card ${cls}" onclick="openTblModal(${t.id})">
+      const isSelected = selectedIds.has(t.id);
+      const cls = isSelected ? 'selected' : (t.status === 'empty' ? 'empty' : t.status === 'combined' ? 'combined' : 'occupied');
+      const lbl = isSelected ? '선택됨' : (t.status === 'empty' ? '빈 자리' : t.status === 'combined' ? '합석 중' : '사용 중');
+      return `<div class="tbl-card ${cls}"
+        onclick="handleTblClick(${t.id})"
+        onmousedown="startPress(${t.id})"
+        onmouseup="endPress()"
+        onmouseleave="endPress()"
+        ontouchstart="startPress(${t.id})"
+        ontouchend="endPress()">
         <div class="tnum">${t.id}번</div>
         <div class="tseat">${t.seats}인석</div>
         <div class="tbl-badge">${lbl}</div>
       </div>`;
     }).join('');
   }
+
+  window.startPress = function(id) {
+    pressTimer = setTimeout(() => {
+      multiSelectMode = true;
+      toggleSelect(id);
+    }, 500);
+  };
+
+  window.endPress = function() {
+    clearTimeout(pressTimer);
+  };
+
+  window.handleTblClick = function(id) {
+    if (multiSelectMode) {
+      toggleSelect(id);
+    } else {
+      openTblModal(id);
+    }
+  };
+
+  function toggleSelect(id) {
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      selectedIds.add(id);
+    }
+    if (selectedIds.size === 0) {
+      multiSelectMode = false;
+    }
+    updateMultiToolbar();
+    renderTableGrid();
+  }
+
+  function updateMultiToolbar() {
+    const toolbar = document.getElementById('multi-toolbar');
+    if (selectedIds.size > 0) {
+      toolbar.classList.add('show');
+      document.getElementById('multi-info').textContent = `${selectedIds.size}개 테이블 선택됨`;
+    } else {
+      toolbar.classList.remove('show');
+    }
+  }
+
+  window.clearSelection = function() {
+    selectedIds.clear();
+    multiSelectMode = false;
+    updateMultiToolbar();
+    renderTableGrid();
+  };
+
+  window.bulkSetStatus = async function(status) {
+    const updates = {};
+    selectedIds.forEach(id => {
+      updates[`tables/${id}/status`] = status;
+    });
+    await update(ref(db), updates);
+    const count = selectedIds.size;
+    selectedIds.clear();
+    multiSelectMode = false;
+    updateMultiToolbar();
+    showToast(`${count}개 테이블 ${status === 'occupied' ? '착석' : '비움'} 처리 완료`);
+  };
 
   function renderMetrics() {
     const empty = tables.filter(t => t.status === 'empty').length;
@@ -266,7 +348,7 @@
     el.innerHTML = waiting.map((w, i) => {
       const p = w.people;
       const pc = p <= 2 ? 'p2' : p === 3 ? 'p3' : p === 4 ? 'p4' : 'p5p';
-      const calledMark = w.status === 'called' ? '<span style="font-size:11px;color:#185FA5;margin-left:6px;font-weight:500">호출됨</span>' : '';
+      const calledMark = w.status === 'called' ? '<span style="font-size:11px;color:#185FA5;margin-left:6px">호출됨</span>' : '';
       return `<div class="wait-item ${w.status === 'called' ? 'called' : ''}">
         <div class="wnum">${i + 1}</div>
         <div class="winfo">
@@ -275,7 +357,7 @@
         </div>
         <span class="pbadge ${pc}">${p}명</span>
         <div class="wactions">
-          <button class="btn-sm call" onclick="callWaiting('${w.key}', '${w.name}')">호출</button>
+          <button class="btn-sm call" onclick="callWaiting('${w.key}','${w.name}')">호출</button>
           <button class="btn-sm" onclick="admitWaiting('${w.key}')">입장</button>
           <button class="btn-sm" onclick="removeWaiting('${w.key}')">✕</button>
         </div>
@@ -299,6 +381,7 @@
   };
 
   window.openTblModal = function(id) {
+    if (multiSelectMode) return;
     selectedTable = tables.find(t => t.id === id);
     document.getElementById('modal-title').textContent = `${id}번 테이블`;
     document.getElementById('modal-sub').textContent = `${selectedTable.seats}인석 · ${selectedTable.status === 'empty' ? '빈 자리' : selectedTable.status === 'combined' ? '합석 중' : '사용 중'}`;

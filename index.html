@@ -23,14 +23,20 @@
     .form{padding:1.5rem;position:relative;z-index:1;flex:1}
     .flabel{font-size:11px;font-weight:500;color:#444;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;display:block}
     .frow{margin-bottom:1rem}
-    input{width:100%;background:#111;border:0.5px solid #1e1e1e;border-radius:10px;padding:13px 16px;font-size:15px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+    input[type=text],input[type=tel],input[type=number]{width:100%;background:#111;border:0.5px solid #1e1e1e;border-radius:10px;padding:13px 16px;font-size:15px;color:#fff;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
     input::placeholder{color:#2e2e2e}
     input:focus{border-color:#3b6ff0}
-    .sbtn{width:100%;margin-top:1.25rem;padding:15px;border-radius:12px;border:none;background:#3b6ff0;color:#fff;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:0.02em;transition:background 0.15s}
-    .sbtn:hover{background:#2d5dd4}
+    .privacy-box{background:#111;border:0.5px solid #1e1e1e;border-radius:10px;padding:14px;margin-bottom:1rem}
+    .privacy-title{font-size:11px;font-weight:500;color:#444;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px}
+    .privacy-text{font-size:12px;color:#333;line-height:1.8}
+    .privacy-text .key{color:#2e2e2e;display:inline-block;width:60px}
+    .agree-row{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:0.5px solid #1a1a1a;cursor:pointer}
+    .agree-check{width:18px;height:18px;border:0.5px solid #2e2e2e;border-radius:4px;background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:11px;color:transparent}
+    .agree-check.checked{background:#3b6ff0;border-color:#3b6ff0;color:#fff}
+    .agree-label{font-size:13px;color:#444;line-height:1.4}
+    .sbtn{width:100%;margin-top:0.25rem;padding:15px;border-radius:12px;border:none;background:#3b6ff0;color:#fff;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:0.02em;transition:background 0.15s}
+    .sbtn:hover:not(:disabled){background:#2d5dd4}
     .sbtn:disabled{background:#1a1a1a;color:#2e2e2e;cursor:not-allowed}
-
-    /* 상태 화면 */
     .status{display:none;padding:1.5rem;flex:1;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;z-index:1}
     .status.show{display:flex}
     .rank-big{font-family:'Playfair Display',serif;font-style:italic;font-size:100px;font-weight:700;color:#fff;line-height:1;letter-spacing:-0.02em}
@@ -46,7 +52,6 @@
     .ival{font-size:14px;color:#bbb}
     .cbtn{margin-top:1rem;width:100%;padding:12px;border-radius:10px;border:0.5px solid #1a1a1a;background:none;color:#2e2e2e;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
     .cbtn:hover{border-color:#2e2e2e;color:#555}
-
     .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a1a1a;border:0.5px solid #2a2a2a;color:#bbb;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;z-index:200}
     .toast.show{opacity:1}
   </style>
@@ -55,7 +60,6 @@
 <div class="frame">
   <div class="orb orb1"></div>
   <div class="orb orb2"></div>
-
   <div class="top">
     <div class="logo">Lable<span>.</span></div>
     <div class="tagline">own your lable, embrace the vibe</div>
@@ -65,7 +69,6 @@
     <div class="bar-text">현재 웨이팅을 받고 있어요</div>
   </div>
 
-  <!-- 등록 폼 -->
   <div class="form" id="form-area">
     <div class="frow">
       <label class="flabel">이름</label>
@@ -79,18 +82,29 @@
       <label class="flabel">인원 수</label>
       <input type="number" id="g-people" placeholder="몇 명이세요?" min="1" max="20">
     </div>
-    <button class="sbtn" id="submit-btn" onclick="register()">웨이팅 등록</button>
+    <div class="privacy-box">
+      <div class="privacy-title">개인정보 수집 및 이용 안내</div>
+      <div class="privacy-text">
+        <span class="key">수집 항목</span> 이름, 전화번호, 방문 인원<br>
+        <span class="key">수집 목적</span> 웨이팅 순서 확인 및 입장 안내<br>
+        <span class="key">보유 기간</span> 입장 완료 즉시 삭제<br><br>
+        수집된 개인정보는 웨이팅 안내 외 다른 용도로 사용되지 않습니다.
+      </div>
+      <div class="agree-row" onclick="toggleAgree()">
+        <div class="agree-check" id="agree-check">✓</div>
+        <div class="agree-label">위 내용을 확인했으며 개인정보 수집에 동의합니다</div>
+      </div>
+    </div>
+    <button class="sbtn" id="submit-btn" onclick="register()" disabled>웨이팅 등록</button>
   </div>
 
-  <!-- 대기 상태 -->
   <div class="status" id="status-area">
     <div>
       <div class="rank-big" id="rank-num">-</div>
       <div class="rank-unit">번째 대기 중</div>
     </div>
     <div class="pill waiting" id="st-pill">
-      <span class="pill-dot"></span>
-      대기 중
+      <span class="pill-dot"></span>대기 중
     </div>
     <div class="icard">
       <div class="irow"><span class="ikey">이름</span><span class="ival" id="st-name"></span></div>
@@ -105,7 +119,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyC0MGzM4cNKoUBeHO4nAWhFcyLTwOPh1a4",
@@ -123,6 +137,13 @@
 
   let myKey = localStorage.getItem('lable_my_key');
   let allWaiting = {};
+  let agreed = false;
+
+  window.toggleAgree = function() {
+    agreed = !agreed;
+    document.getElementById('agree-check').className = 'agree-check' + (agreed ? ' checked' : '');
+    document.getElementById('submit-btn').disabled = !agreed;
+  };
 
   onValue(waitingRef, (snapshot) => {
     allWaiting = snapshot.val() || {};
@@ -162,6 +183,7 @@
   }
 
   window.register = async function() {
+    if (!agreed) return;
     const name = document.getElementById('g-name').value.trim();
     const phone = document.getElementById('g-phone').value.trim();
     const people = parseInt(document.getElementById('g-people').value);
@@ -174,7 +196,6 @@
     const newRef = await push(waitingRef, { name, phone, people, status: 'waiting', createdAt: Date.now() });
     myKey = newRef.key;
     localStorage.setItem('lable_my_key', myKey);
-    btn.disabled = false;
     btn.textContent = '웨이팅 등록';
     showToast('웨이팅 등록 완료!');
   };
@@ -187,6 +208,9 @@
     document.getElementById('g-name').value = '';
     document.getElementById('g-phone').value = '';
     document.getElementById('g-people').value = '';
+    agreed = false;
+    document.getElementById('agree-check').className = 'agree-check';
+    document.getElementById('submit-btn').disabled = true;
     showForm();
     showToast('대기가 취소됐어요');
   };
