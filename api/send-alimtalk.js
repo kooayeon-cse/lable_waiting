@@ -25,12 +25,15 @@ export default async function handler(req, res) {
     .update(message)
     .digest('base64');
 
+  const content = `안녕하세요, ${name}님! 😊 레이블입니다. \n요청하신 ${people}명 자리가 준비되었습니다!\n방문해주시면 순서대로 안내해드리겠습니다!\n※ 입장 안내 메시지 발송 시각을 기준으로 10분 이상 방문이 지연될 경우, \n다음 대기팀에게 자리가 안내될 수 있습니다. \n문의사항은 매장으로 전화 부탁드립니다.\n010-5501-1483\n감사합니다💙`;
+
   const body = {
     plusFriendId: '@레이블',
     templateCode: 'Lable',
     messages: [
       {
         to: phone.replace(/-/g, ''),
+        content,
         templateParameters: {
           이름: name,
           인원: String(people),
