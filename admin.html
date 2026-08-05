@@ -343,7 +343,7 @@
       await fetch('/api/send-alimtalk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: matchTarget.name, phone: matchTarget.phone, people: matchTarget.people })
+        body: JSON.stringify({ name: matchTarget.name, phone: matchTarget.phone, people: matchTarget.people, key: matchTarget.key })
       });
     } catch (e) {
       console.error('알림톡 발송 실패:', e);
@@ -381,7 +381,7 @@
       await fetch('/api/send-alimtalk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, people })
+        body: JSON.stringify({ name, phone, people, key })
       });
     } catch (e) {
       console.error('알림톡 발송 실패:', e);

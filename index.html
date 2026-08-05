@@ -225,7 +225,29 @@
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2500);
   }
-  if (myKey) showStatus();
+  // URL 파라미터로 자동 처리 (카카오 알림톡 버튼)
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get("action");
+  const keyFromUrl = params.get("key");
+
+  if (action && keyFromUrl) {
+    window.history.replaceState({}, "", "/");
+    onValue(waitingRef, async (snapshot) => {
+      const data = snapshot.val() || {};
+      if (!data[keyFromUrl]) { showToast("이미 처리된 대기예요"); return; }
+      if (action === "cancel") {
+        await remove(ref(db, `waiting/${keyFromUrl}`));
+        showToast("대기가 취소됐어요 ✅");
+      } else if (action === "skip") {
+        await update(ref(db, `waiting/${keyFromUrl}`), { status: "waiting", createdAt: Date.now() });
+        myKey = keyFromUrl;
+        localStorage.setItem("lable_my_key", myKey);
+        showToast("다음 순서로 넘어갔어요 ✅");
+      }
+    }, { onlyOnce: true });
+  } else if (myKey) {
+    showStatus();
+  }
 </script>
 </body>
 </html>

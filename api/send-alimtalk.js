@@ -5,15 +5,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, phone, people } = req.body;
+  const { name, phone, people, key } = req.body;
 
-  if (!name || !phone || !people) {
+  if (!name || !phone || !people || !key) {
     return res.status(400).json({ error: '필수 파라미터 누락' });
   }
 
   const accessKey = process.env.NCP_ACCESS_KEY;
   const secretKey = process.env.NCP_SECRET_KEY;
   const serviceId = process.env.NCP_SERVICE_ID;
+  const baseUrl = 'https://lable-waiting.vercel.app';
 
   const timestamp = Date.now().toString();
   const method = 'POST';
@@ -38,6 +39,20 @@ export default async function handler(req, res) {
           이름: name,
           인원: String(people),
         },
+        buttons: [
+          {
+            type: 'WL',
+            name: '건너뛰기',
+            linkMobile: `${baseUrl}?action=skip&key=${key}`,
+            linkPc: `${baseUrl}?action=skip&key=${key}`,
+          },
+          {
+            type: 'WL',
+            name: '대기 취소',
+            linkMobile: `${baseUrl}?action=cancel&key=${key}`,
+            linkPc: `${baseUrl}?action=cancel&key=${key}`,
+          },
+        ],
       },
     ],
   };
