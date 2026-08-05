@@ -339,7 +339,16 @@
   window.callMatch = async function() {
     if (!matchTarget) return;
     await update(ref(db, `waiting/${matchTarget.key}`), { status: 'called' });
-    showToast(`${matchTarget.name}님 호출 완료`);
+    try {
+      await fetch('/api/send-alimtalk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: matchTarget.name, phone: matchTarget.phone, people: matchTarget.people })
+      });
+    } catch (e) {
+      console.error('알림톡 발송 실패:', e);
+    }
+    showToast(`${matchTarget.name}님 호출 + 카카오 알림 발송 완료`);
   };
 
   function renderWaitList() {
@@ -357,7 +366,7 @@
         </div>
         <span class="pbadge ${pc}">${p}명</span>
         <div class="wactions">
-          <button class="btn-sm call" onclick="callWaiting('${w.key}','${w.name}')">호출</button>
+          <button class="btn-sm call" onclick="callWaiting('${w.key}','${w.name}','${w.phone}',${w.people})">호출</button>
           <button class="btn-sm" onclick="admitWaiting('${w.key}')">입장</button>
           <button class="btn-sm" onclick="removeWaiting('${w.key}')">✕</button>
         </div>
@@ -365,9 +374,19 @@
     }).join('');
   }
 
-  window.callWaiting = async function(key, name) {
+  window.callWaiting = async function(key, name, phone, people) {
     await update(ref(db, `waiting/${key}`), { status: 'called' });
-    showToast(`${name}님 호출 완료`);
+    // 카카오 알림톡 발송
+    try {
+      await fetch('/api/send-alimtalk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, people })
+      });
+    } catch (e) {
+      console.error('알림톡 발송 실패:', e);
+    }
+    showToast(`${name}님 호출 + 카카오 알림 발송 완료`);
   };
 
   window.admitWaiting = async function(key) {
