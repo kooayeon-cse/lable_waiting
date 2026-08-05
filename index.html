@@ -50,8 +50,12 @@
     .irow:last-child{border-bottom:none}
     .ikey{font-size:11px;color:#444;letter-spacing:0.1em;text-transform:uppercase}
     .ival{font-size:14px;color:#bbb}
-    .cbtn{margin-top:1rem;width:100%;padding:12px;border-radius:10px;border:0.5px solid #1a1a1a;background:none;color:#2e2e2e;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
+    .btn-row{display:flex;gap:8px;margin-top:1rem;width:100%}
+    .cbtn{flex:1;padding:12px;border-radius:10px;border:0.5px solid #1a1a1a;background:none;color:#2e2e2e;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s}
     .cbtn:hover{border-color:#2e2e2e;color:#555}
+    .skip-btn{flex:1;padding:12px;border-radius:10px;border:0.5px solid #2a2a2a;background:none;color:#555;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s;display:none}
+    .skip-btn.show{display:block}
+    .skip-btn:hover{border-color:#555;color:#888}
     .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a1a1a;border:0.5px solid #2a2a2a;color:#bbb;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;z-index:200}
     .toast.show{opacity:1}
   </style>
@@ -68,7 +72,6 @@
     <div class="bar-dot"></div>
     <div class="bar-text">현재 웨이팅을 받고 있어요</div>
   </div>
-
   <div class="form" id="form-area">
     <div class="frow">
       <label class="flabel">이름</label>
@@ -97,7 +100,6 @@
     </div>
     <button class="sbtn" id="submit-btn" onclick="register()" disabled>웨이팅 등록</button>
   </div>
-
   <div class="status" id="status-area">
     <div>
       <div class="rank-big" id="rank-num">-</div>
@@ -111,16 +113,16 @@
       <div class="irow"><span class="ikey">인원</span><span class="ival" id="st-people"></span></div>
       <div class="irow"><span class="ikey">전화번호</span><span class="ival" id="st-phone"></span></div>
     </div>
-    <button class="cbtn" onclick="cancel()">대기 취소</button>
+    <div class="btn-row">
+      <button class="cbtn" onclick="cancel()">대기 취소</button>
+      <button class="skip-btn" id="skip-btn" onclick="skip()">건너뛰기</button>
+    </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+  import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   const firebaseConfig = {
     apiKey: "AIzaSyC0MGzM4cNKoUBeHO4nAWhFcyLTwOPh1a4",
     authDomain: "lable-waiting.firebaseapp.com",
@@ -130,21 +132,17 @@
     messagingSenderId: "1073923206160",
     appId: "1:1073923206160:web:b42ad8098871463e08ee95"
   };
-
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const waitingRef = ref(db, 'waiting');
-
   let myKey = localStorage.getItem('lable_my_key');
   let allWaiting = {};
   let agreed = false;
-
   window.toggleAgree = function() {
     agreed = !agreed;
     document.getElementById('agree-check').className = 'agree-check' + (agreed ? ' checked' : '');
     document.getElementById('submit-btn').disabled = !agreed;
   };
-
   onValue(waitingRef, (snapshot) => {
     allWaiting = snapshot.val() || {};
     if (myKey && allWaiting[myKey]) {
@@ -156,7 +154,6 @@
       showToast('입장이 확인됐어요! 즐거운 시간 되세요 🍺');
     }
   });
-
   function showStatus() {
     const entries = Object.entries(allWaiting).sort((a, b) => a[1].createdAt - b[1].createdAt);
     const idx = entries.findIndex(([k]) => k === myKey);
@@ -166,22 +163,23 @@
     document.getElementById('st-people').textContent = my.people + '명';
     document.getElementById('st-phone').textContent = my.phone;
     const pill = document.getElementById('st-pill');
+    const skipBtn = document.getElementById('skip-btn');
     if (my.status === 'called') {
       pill.innerHTML = '<span class="pill-dot"></span>입장 가능 — 직원에게 말씀해주세요';
       pill.className = 'pill called';
+      skipBtn.classList.add('show');
     } else {
       pill.innerHTML = '<span class="pill-dot"></span>대기 중';
       pill.className = 'pill waiting';
+      skipBtn.classList.remove('show');
     }
     document.getElementById('form-area').style.display = 'none';
     document.getElementById('status-area').classList.add('show');
   }
-
   function showForm() {
     document.getElementById('form-area').style.display = 'block';
     document.getElementById('status-area').classList.remove('show');
   }
-
   window.register = async function() {
     if (!agreed) return;
     const name = document.getElementById('g-name').value.trim();
@@ -199,7 +197,6 @@
     btn.textContent = '웨이팅 등록';
     showToast('웨이팅 등록 완료!');
   };
-
   window.cancel = async function() {
     if (!myKey) return;
     await remove(ref(db, `waiting/${myKey}`));
@@ -214,14 +211,20 @@
     showForm();
     showToast('대기가 취소됐어요');
   };
-
+  window.skip = async function() {
+    if (!myKey) return;
+    await update(ref(db, `waiting/${myKey}`), {
+      status: 'waiting',
+      createdAt: Date.now()
+    });
+    showToast('다음 순서로 넘어갔어요');
+  };
   function showToast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg;
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2500);
   }
-
   if (myKey) showStatus();
 </script>
 </body>
