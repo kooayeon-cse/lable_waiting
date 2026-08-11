@@ -40,20 +40,6 @@ export default async function handler(req, res) {
           인원: String(people),
           key: key,
         },
-        buttons: [
-          {
-            type: 'WL',
-            name: '건너뛰기',
-            linkMobile: `${baseUrl}?action=skip&key=${key}`,
-            linkPc: `${baseUrl}?action=skip&key=${key}`,
-          },
-          {
-            type: 'WL',
-            name: '대기 취소',
-            linkMobile: `${baseUrl}?action=cancel&key=${key}`,
-            linkPc: `${baseUrl}?action=cancel&key=${key}`,
-          },
-        ],
       },
     ],
   };
