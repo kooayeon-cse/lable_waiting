@@ -39,6 +39,20 @@ export default async function handler(req, res) {
           이름: name,
           인원: String(people),
         },
+        buttons: [
+          {
+            type: 'WL',
+            name: '건너뛰기',
+            linkMobile: 'https://lable-waiting.vercel.app',
+            linkPc: 'https://lable-waiting.vercel.app',
+          },
+          {
+            type: 'WL',
+            name: '대기취소',
+            linkMobile: 'https://lable-waiting.vercel.app',
+            linkPc: 'https://lable-waiting.vercel.app',
+          },
+        ],
       },
     ],
   };
