@@ -38,7 +38,6 @@ export default async function handler(req, res) {
         templateParameters: {
           이름: name,
           인원: String(people),
-          key: key,
         },
       },
     ],
