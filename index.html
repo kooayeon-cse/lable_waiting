@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lable — 웨이팅</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/cooper-black" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{min-height:100vh;background:#f5f5f5;color:#111;font-family:'Inter',sans-serif}
     .frame{max-width:390px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
     .top{padding:2.5rem 1.5rem 0}
-    .logo{font-family:'Playfair Display',serif;font-style:italic;font-size:36px;font-weight:700;color:#111;letter-spacing:-0.01em}
-    .logo span{color:#378ADD}
-    .tagline{font-size:11px;font-weight:300;color:#aaa;letter-spacing:0.18em;text-transform:uppercase;margin-top:5px}
+    .logo{font-family:'Cooper Black',serif;font-style:italic;font-size:36px;font-weight:700;color:#111;flex-shrink:0}
+    .tagline{font-family:'Cooper Black',serif;font-style:italic;font-size:12px;color:#0055FF;text-align:right;line-height:1.2;margin-left:8px}
     .bar{display:flex;align-items:center;gap:8px;margin:1.5rem 1.5rem 0;padding:10px 14px;border:0.5px solid #e8e8e8;border-radius:10px;background:#fff}
     .bar-dot{width:6px;height:6px;border-radius:50%;background:#378ADD;flex-shrink:0}
     .bar-text{font-size:12px;color:#888;letter-spacing:0.04em}
@@ -60,8 +60,10 @@
 <body>
 <div class="frame">
   <div class="top">
-    <div class="logo">Lable<span>.</span></div>
-    <div class="tagline">own your lable, embrace the vibe</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="logo">LABLE</div>
+      <div class="tagline">I'M ABLE · WE'RE ABLE<br>L, ABLE · LABLE</div>
+    </div>
   </div>
   <div class="bar">
     <div class="bar-dot"></div>
