@@ -53,6 +53,10 @@
     .tbl-card.selected .tbl-badge { background: #185FA5; color: #fff; }
 
     /* 대기 목록 */
+    .group-head { font-size: 13px; font-weight: 600; color: #333; margin: 10px 0 2px; }
+    .group-head:first-child { margin-top: 0; }
+    .group-count { font-size: 12px; font-weight: 500; color: #378ADD; margin-left: 4px; }
+    .group-empty { font-size: 12px; color: #bbb; padding: 8px 2px; }
     .wait-list { display: flex; flex-direction: column; gap: 8px; }
     .wait-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .wait-item.called { border-left: 3px solid #378ADD; }
@@ -351,27 +355,35 @@
     showToast(`${matchTarget.name}님 호출 + 카카오 알림 발송 완료`);
   };
 
+  function renderWaitItem(w, n) {
+    const p = w.people;
+    const pc = p <= 2 ? 'p2' : p === 3 ? 'p3' : p === 4 ? 'p4' : 'p5p';
+    const calledMark = w.status === 'called' ? '<span style="font-size:11px;color:#185FA5;margin-left:6px">호출됨</span>' : '';
+    return `<div class="wait-item ${w.status === 'called' ? 'called' : ''}">
+      <div class="wnum">${n}</div>
+      <div class="winfo">
+        <div class="wname">${w.name}${calledMark}</div>
+        <div class="wdetail">${w.phone}</div>
+      </div>
+      <span class="pbadge ${pc}">${p}명</span>
+      <div class="wactions">
+        <button class="btn-sm call" onclick="callWaiting('${w.key}','${w.name}','${w.phone}',${w.people})">호출</button>
+        <button class="btn-sm" onclick="admitWaiting('${w.key}')">입장</button>
+        <button class="btn-sm" onclick="removeWaiting('${w.key}')">✕</button>
+      </div>
+    </div>`;
+  }
+
   function renderWaitList() {
     const el = document.getElementById('wait-list');
     if (!waiting.length) { el.innerHTML = '<div class="empty-state">대기 중인 손님이 없어요</div>'; return; }
-    el.innerHTML = waiting.map((w, i) => {
-      const p = w.people;
-      const pc = p <= 2 ? 'p2' : p === 3 ? 'p3' : p === 4 ? 'p4' : 'p5p';
-      const calledMark = w.status === 'called' ? '<span style="font-size:11px;color:#185FA5;margin-left:6px">호출됨</span>' : '';
-      return `<div class="wait-item ${w.status === 'called' ? 'called' : ''}">
-        <div class="wnum">${i + 1}</div>
-        <div class="winfo">
-          <div class="wname">${w.name}${calledMark}</div>
-          <div class="wdetail">${w.phone}</div>
-        </div>
-        <span class="pbadge ${pc}">${p}명</span>
-        <div class="wactions">
-          <button class="btn-sm call" onclick="callWaiting('${w.key}','${w.name}','${w.phone}',${w.people})">호출</button>
-          <button class="btn-sm" onclick="admitWaiting('${w.key}')">입장</button>
-          <button class="btn-sm" onclick="removeWaiting('${w.key}')">✕</button>
-        </div>
-      </div>`;
-    }).join('');
+    // 손님 화면과 같은 기준: 2인 이하 / 3인 이상 그룹별로 순번 계산
+    const small = waiting.filter(w => w.people <= 2);
+    const large = waiting.filter(w => w.people >= 3);
+    const section = (title, list) => `
+      <div class="group-head">${title} <span class="group-count">${list.length}팀</span></div>
+      ${list.length ? list.map((w, i) => renderWaitItem(w, i + 1)).join('') : '<div class="group-empty">대기 없음</div>'}`;
+    el.innerHTML = section('2인 이하 팀', small) + section('3인 이상 팀', large);
   }
 
   window.callWaiting = async function(key, name, phone, people) {
