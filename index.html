@@ -37,7 +37,6 @@
     .status{display:none;padding:1.5rem;flex:1;flex-direction:column;align-items:center;justify-content:center;text-align:center}
     .status.show{display:flex}
     .rank-big{font-family:'Playfair Display',serif;font-style:italic;font-size:100px;font-weight:700;color:#111;line-height:1;letter-spacing:-0.02em}
-    .rank-group{font-size:12px;color:#378ADD;margin-top:8px;font-weight:500}
     .rank-unit{font-size:12px;color:#aaa;letter-spacing:0.16em;text-transform:uppercase;margin-top:6px}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:500;letter-spacing:0.06em;margin:1rem 0}
     .pill.waiting{background:#EBF3FC;border:0.5px solid #B5D4F4;color:#185FA5}
@@ -54,6 +53,13 @@
     .skip-btn{flex:1;padding:12px;border-radius:10px;border:0.5px solid #e0e0e0;background:#fff;color:#888;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s;display:none}
     .skip-btn.show{display:block}
     .skip-btn:hover{border-color:#ccc;color:#555}
+    .enter-box{width:100%;background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:14px;padding:1.1rem;margin-top:0.5rem;display:none;text-align:center}
+    .enter-box.show{display:block}
+    .enter-text{font-size:13px;color:#3B6D11;line-height:1.6;margin-bottom:12px}
+    .enter-btn{width:100%;padding:14px;border-radius:12px;border:none;background:#111;color:#fff;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer}
+    .enter-btn:disabled{background:#999;cursor:not-allowed}
+    .done-title{font-family:'Cooper Black',serif;font-style:italic;font-size:30px;color:#111;margin-bottom:10px}
+    .done-sub{font-size:14px;color:#888;line-height:1.7}
     .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;z-index:200}
     .toast.show{opacity:1}
   </style>
@@ -102,7 +108,6 @@
     <div>
       <div class="rank-big" id="rank-num">-</div>
       <div class="rank-unit">번째 대기 중</div>
-      <div class="rank-group" id="rank-group"></div>
     </div>
     <div class="pill waiting" id="st-pill">
       <span class="pill-dot"></span>대기 중
@@ -112,10 +117,18 @@
       <div class="irow"><span class="ikey">인원</span><span class="ival" id="st-people"></span></div>
       <div class="irow"><span class="ikey">전화번호</span><span class="ival" id="st-phone"></span></div>
     </div>
+    <div class="enter-box" id="enter-box">
+      <div class="enter-text">매장에 입장하실 때<br><b>아래 입장하기 버튼</b>을 눌러주세요</div>
+      <button class="enter-btn" id="enter-btn" onclick="enter()">입장하기</button>
+    </div>
     <div class="btn-row">
       <button class="cbtn" onclick="cancel()">대기 취소</button>
       <button class="skip-btn" id="skip-btn" onclick="skip()">건너뛰기</button>
     </div>
+  </div>
+  <div class="status" id="done-area">
+    <div class="done-title">Welcome</div>
+    <div class="done-sub">입장이 확인됐어요<br>즐거운 시간 되세요 🍺</div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -162,20 +175,21 @@
       .sort((a, b) => a[1].createdAt - b[1].createdAt);
     const idx = sameGroup.findIndex(([k]) => k === myKey);
     document.getElementById('rank-num').textContent = idx + 1;
-    document.getElementById('rank-group').textContent = myGroup === 'small' ? '2인 이하 팀 기준' : '3인 이상 팀 기준';
     document.getElementById('st-name').textContent = my.name;
     document.getElementById('st-people').textContent = my.people + '명';
     document.getElementById('st-phone').textContent = my.phone;
     const pill = document.getElementById('st-pill');
     const skipBtn = document.getElementById('skip-btn');
     if (my.status === 'called') {
-      pill.innerHTML = '<span class="pill-dot"></span>입장 가능 — 직원에게 말씀해주세요';
+      pill.innerHTML = '<span class="pill-dot"></span>자리가 준비됐어요';
       pill.className = 'pill called';
       skipBtn.classList.add('show');
+      document.getElementById('enter-box').classList.add('show');
     } else {
       pill.innerHTML = '<span class="pill-dot"></span>대기 중';
       pill.className = 'pill waiting';
       skipBtn.classList.remove('show');
+      document.getElementById('enter-box').classList.remove('show');
     }
     document.getElementById('form-area').style.display = 'none';
     document.getElementById('status-area').classList.add('show');
@@ -183,6 +197,12 @@
   function showForm() {
     document.getElementById('form-area').style.display = 'block';
     document.getElementById('status-area').classList.remove('show');
+    document.getElementById('done-area').classList.remove('show');
+  }
+  function showDone() {
+    document.getElementById('form-area').style.display = 'none';
+    document.getElementById('status-area').classList.remove('show');
+    document.getElementById('done-area').classList.add('show');
   }
   window.register = async function() {
     if (!agreed) return;
@@ -226,6 +246,25 @@
     document.getElementById('submit-btn').disabled = true;
     showForm();
     showToast('대기가 취소됐어요');
+  };
+  window.enter = async function() {
+    if (!myKey) return;
+    const key = myKey;
+    const btn = document.getElementById('enter-btn');
+    btn.disabled = true;
+    btn.textContent = '처리 중...';
+    myKey = null;
+    localStorage.removeItem('lable_my_key');
+    try {
+      await remove(ref(db, `waiting/${key}`));
+      showDone();
+    } catch (e) {
+      myKey = key;
+      localStorage.setItem('lable_my_key', key);
+      btn.disabled = false;
+      btn.textContent = '입장하기';
+      showToast('처리에 실패했어요. 다시 눌러주세요');
+    }
   };
   window.skip = async function() {
     if (!myKey) return;
